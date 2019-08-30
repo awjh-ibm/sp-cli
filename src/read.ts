@@ -8,7 +8,7 @@ export class Read extends Command {
         super(dataStore, [], answers);
         const httpConfig: HttpServiceConfig = {
             host: 'http://localhost',
-            port: '4567',
+            port: '7000',
             baseUrl: '/api'
         };
         this.httpService = new HttpService(httpConfig);
