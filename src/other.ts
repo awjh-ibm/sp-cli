@@ -9,7 +9,7 @@ export class Other extends Command {
         super(dataStore, [], answers);
         const httpConfig: HttpServiceConfig = {
             host: 'http://localhost',
-            port: '4567',
+            port: process.env.EP_CLI_PORT,
             baseUrl: '/api'
         };
         this.httpService = new HttpService(httpConfig);
