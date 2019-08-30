@@ -7,6 +7,9 @@ export class PrettyDisplay extends Table {
             super();
             this.push(['No data']);
         } else {
+            if (!Array.isArray(data)) {
+                data = [data];
+            }
             super({
                 head: PrettyDisplay.getHead(data)
             });

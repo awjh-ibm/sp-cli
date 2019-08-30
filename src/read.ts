@@ -29,6 +29,6 @@ export class Read extends Command {
     public async getData(readAnswers: {[key: string]: any}) {
         const assetType = readAnswers.assetType.toLowerCase().replace(' ', '');
 
-        return this.httpService.get(assetType);
+        return this.httpService.get(assetType, {user: this.dataStore.auth});
     }
 }

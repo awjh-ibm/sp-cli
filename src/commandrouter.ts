@@ -1,4 +1,6 @@
-import { Read } from "./read";
+import { Read } from './read';
+import { Create } from './create';
+import { Other } from './other';
 import { PrettyDisplay } from './prettydisplay';
 
 export class CommandRouter {
@@ -6,17 +8,23 @@ export class CommandRouter {
     public static async route(dataStore, answers: {[key: string]: any}) {
         const highLevel: string = answers.highLevel;
 
+        let data;
+        let table;
         switch (highLevel) {
             case 'Create':
+                const create = new Create(dataStore, answers);
+                data = await create.questions();
                 break;
             case 'Read':
                 const read = new Read(dataStore, answers);
-                const data = await read.questions();
-                const table = new PrettyDisplay(data);
-                console.log(table.toString());
+                data = await read.questions();
                 break;
             case 'Other':
+                const other = new Other(dataStore, answers);
+                data = await other.questions();
                 break;
         }
+        table = new PrettyDisplay(data);
+        console.log(table.toString());
     }
 }
