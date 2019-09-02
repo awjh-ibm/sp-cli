@@ -104,7 +104,25 @@ export class Create extends Command {
         createAnswers.requesterId = this.dataStore.auth;
         createAnswers.financierIds = createAnswers.financierIds.split(',').map((financierId) => financierId.replace(" ", ""));
         const financeRequestGroup = await this.createFinanceRequest(createAnswers);
-        return this.httpService.get(`financerequests/group/hash/${financeRequestGroup.hash}`, {user: this.dataStore.auth})
+
+        let fullFrg;
+
+        for (let i = 0; i < 5; i++) {
+            try {
+                fullFrg = await this.httpService.get(`financerequests/group/hash/${financeRequestGroup.hash}`, {user: this.dataStore.auth});
+                break;
+            } catch (e) {
+                if (i == 4) {
+                    throw e;
+                }
+
+                await new Promise((resolve) => {
+                    setTimeout(() => resolve(), 250);
+                });
+            }
+        }
+
+        return fullFrg;
     }
 
     private async createFinanceRequest(createAnswers) {
