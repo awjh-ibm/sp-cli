@@ -1,3 +1,5 @@
+import { PrettyError } from "./prettyerror";
+
 export class Command {
 
     answers: any;
@@ -19,7 +21,7 @@ export class Command {
     private hasRequiredArgs() {
         for (const arg in this.requiredArgs) {
             if (!this.answers.hasOwnProperty(arg) && this.answers[arg] !== null) {
-                throw new Error(`Missing arg ${arg}`);
+                throw new PrettyError(`Missing arg ${arg}`);
             }
         }
     }

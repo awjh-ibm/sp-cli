@@ -1,6 +1,7 @@
 import {Command} from './command';
 import {HttpService, HttpServiceConfig} from './httpservice';
 import inquirer = require('inquirer');
+import { PrettyError } from './prettyerror';
 
 export class Create extends Command {
     httpService: HttpService;
@@ -25,11 +26,11 @@ export class Create extends Command {
         ]);
         switch (createAnswers.assetType.replace(' ', '')) {
             case 'PurchaseOrders':
-                return this.createPurchaseOrderQuestions();
+                return await this.createPurchaseOrderQuestions();
             case 'FinanceRequests':
-                return this.createFinanceRequestQuestions();
+                return await this.createFinanceRequestQuestions();
             case 'Shipments':
-                return this.createShipmentQuestions();
+                return await this.createShipmentQuestions();
         }
     }
 
@@ -65,12 +66,13 @@ export class Create extends Command {
 
     private async createFinanceRequestQuestions() {
         let purchaseOrders = await this.httpService.get('purchaseorders', {user: this.dataStore.auth});
+
         purchaseOrders = purchaseOrders.filter((po) => {
             return po.status === 'APPROVED' && po.sellerId === this.dataStore.auth;
         });
 
         if (purchaseOrders.length === 0) {
-            throw new Error('No purchase orders available to finance');
+            throw new PrettyError('No purchase orders available');
         }
         const createAnswers: any = await inquirer.prompt([
             {
@@ -149,7 +151,7 @@ export class Create extends Command {
         ]);
         const myOrders = purchaseOrders.filter((po) => po.id === createAnswers.purchaseOrderId)
         if (myOrders.length === 0) {
-            return [{'': 'You have no purchase orders'}]
+            throw new PrettyError('No purchase orders available');
         }
         createAnswers.receiverId = myOrders[0].buyerId;
         return this.createShipment(createAnswers);

@@ -2,6 +2,7 @@ import { Command } from "./command";
 import { HttpService, HttpServiceConfig } from "./httpservice";
 import inquirer = require("inquirer");
 import { PrettyDisplay } from "./prettydisplay";
+import { PrettyError } from "./prettyerror";
 
 export class Other extends Command {
     httpService: HttpService;
@@ -32,16 +33,18 @@ export class Other extends Command {
                 return this.managePurchaseOrder();
             case 'Manage Finance Request':
                 return this.manageFinanceRequest();
-                break;
             case 'Manage Shipment':
                 break;
         }
     }
 
     private async managePurchaseOrder() {
-        const purchaseOrders = await this.httpService.get('purchaseorders', {user: this.dataStore.auth});
+        let purchaseOrders = await this.httpService.get('purchaseorders', {user: this.dataStore.auth});
+        purchaseOrders = purchaseOrders.filter((po) => {
+            return po.status === 'PENDING' && po.sellerId === this.dataStore.auth;
+        });
         if (purchaseOrders.length === 0) {
-            return {'': 'No purchase orders to manage'};
+            throw new PrettyError('No purchase orders to manage');
         }
 
         const manageAnswers: any = await inquirer.prompt([
@@ -86,7 +89,7 @@ export class Other extends Command {
     private async manageFinanceRequest() {
         const financeRequests = await this.httpService.get('financerequests', {user: this.dataStore.auth});
         if (financeRequests.length === 0) {
-            return {'': 'No finance requests to manage'};
+            throw new PrettyError('No finance requests to manage');
         }
         const manageAnswers: any = await inquirer.prompt([
             {

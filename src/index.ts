@@ -1,5 +1,6 @@
 import inquirer = require("inquirer");
 import {CommandRouter} from './commandrouter';
+import { PrettyError } from "./prettyerror";
 
 
 const dataStore = {
@@ -16,13 +17,22 @@ async function questionBuilder() {
 }
 
 async function run() {
-    console.log('Welcome to the We.Trade POC (Service Provider)')
+    console.log('Welcome to the We.Trade POC (Enrolling Party)')
     while (true) {
         const answers: any = await questionBuilder();
         if (answers.hasOwnProperty('username')) {
             dataStore.auth = answers.username;
         } else {
-            await CommandRouter.route(dataStore, answers)
+            try {
+                await CommandRouter.route(dataStore, answers)
+            } catch (err) {
+                if (err instanceof PrettyError) {
+                    console.log(err.toTable());
+                } else {
+                    console.log(err);
+                }
+                await CommandRouter.route(dataStore, answers);
+            }
         }
     }
 }
