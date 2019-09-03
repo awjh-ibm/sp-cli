@@ -70,7 +70,7 @@ function highLevelActions() {
             type: 'list',
             name: 'highLevel',
             message: 'Which action do you want to do?',
-            choices: ['Create', 'Read', 'Other']
+            choices: ['Create', 'Read', 'Other', 'Exit']
         },
     ]);
 }

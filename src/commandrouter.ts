@@ -23,8 +23,12 @@ export class CommandRouter {
                 const other = new Other(dataStore, answers);
                 data = await other.questions();
                 break;
+            case 'Exit':
+                process.exit(0);
         }
-        table = new PrettyDisplay(data);
-        console.log(table.toString());
+        if (data !== "BACK") {
+            table = new PrettyDisplay(data);
+            console.log(table.toString());
+        }
     }
 }

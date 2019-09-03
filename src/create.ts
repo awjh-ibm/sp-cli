@@ -1,8 +1,8 @@
-import {Command} from './command';
-import {HttpService, HttpServiceConfig} from './httpservice';
-import inquirer = require('inquirer');
+import { Command } from './command';
+import { HttpService, HttpServiceConfig } from './httpservice';
 import { PrettyError } from './prettyerror';
 import { Util } from './util';
+import inquirer = require('inquirer');
 
 export class Create extends Command {
     private spList: Array<String> = ['BankOfBrusselsSP', 'CopenhagenBankSP', 'DublinBankSP'];
@@ -27,7 +27,7 @@ export class Create extends Command {
                 type: 'list',
                 name: 'assetType',
                 message: 'What would you like to create?',
-                choices: ['Purchase Orders', 'Finance Requests', 'Shipments']
+                choices: ['Purchase Orders', 'Finance Requests', 'Shipments', 'Go back']
             },
         ]);
         switch (createAnswers.assetType.replace(' ', '')) {
@@ -37,6 +37,8 @@ export class Create extends Command {
                 return await this.createFinanceRequestQuestions();
             case 'Shipments':
                 return await this.createShipmentQuestions();
+            case 'Goback':
+                return 'BACK';
         }
     }
 

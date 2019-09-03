@@ -20,9 +20,14 @@ export class Read extends Command {
                 type: 'list',
                 name: 'assetType',
                 message: 'What would you like to read?',
-                choices: ['Purchase Orders', 'Finance Requests', 'Shipments']
+                choices: ['Purchase Orders', 'Finance Requests', 'Shipments', 'Go back']
             },
         ]);
+
+        if (readAnswers.assetType === 'Go back') {
+            return 'BACK';
+        }
+
         return this.getData(readAnswers);
     }
 

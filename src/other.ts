@@ -23,7 +23,7 @@ export class Other extends Command {
                 type: 'list',
                 name: 'action',
                 message: 'What would you like to do?',
-                choices: ['Manage Purchase Order', 'Manage Finance Request', 'Manage Shipment']
+                choices: ['Manage Purchase Order', 'Manage Finance Request', 'Manage Shipment', 'Go back']
             }
         ]);
 
@@ -36,6 +36,8 @@ export class Other extends Command {
                 return this.manageFinanceRequest();
             case 'Manage Shipment':
                 break;
+            case 'Go back':
+                return 'BACK';
         }
     }
 
