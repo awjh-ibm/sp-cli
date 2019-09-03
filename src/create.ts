@@ -4,6 +4,7 @@ import inquirer = require('inquirer');
 import { PrettyError } from './prettyerror';
 
 export class Create extends Command {
+    private spList: Array<String> = ['BankOfBrusselsSP', 'CopenhagenBankSP', 'DublinBankSP'];
     httpService: HttpService;
     constructor(dataStore, answers: {[key: string]: any}) {
         super(dataStore, [], answers);
@@ -13,6 +14,10 @@ export class Create extends Command {
             baseUrl: '/api'
         };
         this.httpService = new HttpService(httpConfig);
+
+        if (process.env.SP_LIST) {
+            this.spList = process.env.SP_LIST.split(",").map((item) => item.trim());
+        }
     }
 
     public async questions() {
@@ -39,7 +44,7 @@ export class Create extends Command {
             {
                 type: 'text',
                 name: 'sellerId',
-                message: 'Are you buying goods from?'
+                message: 'Who are you buying goods from?'
             },
             {
                 type: 'text',
@@ -76,9 +81,17 @@ export class Create extends Command {
         }
         const createAnswers: any = await inquirer.prompt([
             {
-                type: 'text',
+                type: 'checkbox',
                 name: 'financierIds',
-                message: "Who are you requesting finance from? (comma separated)"
+                message: "Who are you requesting finance from? (minimum of 1)",
+                choices: this.spList,
+                validate: (answers) => {
+                    if (answers.length === 0) {
+                        return 'Minimum of 1 financier required'
+                    }
+
+                    return true;
+                }
             },
             {
                 type: 'list',
@@ -104,7 +117,7 @@ export class Create extends Command {
         ]);
 
         createAnswers.requesterId = this.dataStore.auth;
-        createAnswers.financierIds = createAnswers.financierIds.split(',').map((financierId) => financierId.replace(" ", ""));
+
         const financeRequestGroup = await this.createFinanceRequest(createAnswers);
 
         let fullFrg;
