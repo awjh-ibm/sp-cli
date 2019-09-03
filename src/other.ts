@@ -3,6 +3,7 @@ import { HttpService, HttpServiceConfig } from "./httpservice";
 import inquirer = require("inquirer");
 import { PrettyDisplay } from "./prettydisplay";
 import { PrettyError } from "./prettyerror";
+import { Util } from "./util";
 
 export class Other extends Command {
     httpService: HttpService;
@@ -83,6 +84,8 @@ export class Other extends Command {
                 await this.httpService.put(`purchaseorders/${purchaseOrder.id}/close`, {user: this.dataStore.auth});
                 break;
         }
+        // TODO - Why is this needed? change to po should have been committed before get is ever called
+        await Util.sleep(2000);
         return this.httpService.get(`purchaseorders/${purchaseOrder.id}`, {user: this.dataStore.auth})
     }
 

@@ -23,17 +23,29 @@ async function run() {
         if (answers.hasOwnProperty('username')) {
             dataStore.auth = answers.username;
         } else {
-            try {
-                await CommandRouter.route(dataStore, answers)
-            } catch (err) {
-                if (err instanceof PrettyError) {
-                    console.log(err.toTable());
-                } else {
-                    console.log(err);
-                }
-                await CommandRouter.route(dataStore, answers);
-            }
+            await route(dataStore, answers);
         }
+    }
+}
+
+async function route(dataStore, answers) {
+    if (!dataStore.hasOwnProperty('auth')) {
+        return run();
+    }
+    try {
+        await CommandRouter.route(dataStore, answers);
+    } catch (err) {
+        if (err instanceof PrettyError) {
+            console.log(err.toTable());
+        } else {
+            console.log(err);
+        }
+        const username = answers.username;
+        const password = answers.password;
+        answers = await highLevelActions();
+        answers.username = username;
+        answers.password = password;
+        await route(dataStore, answers);
     }
 }
 

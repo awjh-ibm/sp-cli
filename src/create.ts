@@ -2,6 +2,7 @@ import {Command} from './command';
 import {HttpService, HttpServiceConfig} from './httpservice';
 import inquirer = require('inquirer');
 import { PrettyError } from './prettyerror';
+import { Util } from './util';
 
 export class Create extends Command {
     private spList: Array<String> = ['BankOfBrusselsSP', 'CopenhagenBankSP', 'DublinBankSP'];
@@ -131,9 +132,7 @@ export class Create extends Command {
                     throw e;
                 }
 
-                await new Promise((resolve) => {
-                    setTimeout(() => resolve(), 250);
-                });
+                await Util.sleep(2000);
             }
         }
 

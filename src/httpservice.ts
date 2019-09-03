@@ -15,32 +15,50 @@ export class HttpService {
 
     public async get(endpoint: string, options: any = {}) {
         const {user} = options;
-        const response = await request
-            .get({
-                method: 'GET',
-                url: this.buildUri(endpoint),
-                body: JSON.stringify({
-                    user
+        let response;
+        try {
+            response = await request
+                .get({
+                    method: 'GET',
+                    url: this.buildUri(endpoint),
+                    body: JSON.stringify({
+                        user
+                    })
                 })
-            })
+            response = JSON.parse(response);
+        } catch (err) {
+            response = err;
+        }
         this.handlerError(response);
-        return JSON.parse(response).data;
+        return response.data;
     }
 
     public async post(endpoint: string, body: {[key: string]: any}, options: any = {}) {
         const {user} = options;
-        const response = await request
+        let response;
+        try {
+            response = await request
                 .post(this.buildUri(endpoint), {body: JSON.stringify(Object.assign({user}, body))})
+            response = JSON.parse(response);
+        } catch (err) {
+            response = err;
+        }
         this.handlerError(response);
-        return JSON.parse(response).data;
+        return response.data;
     }
 
     public async put(endpoint: string, body: {[key: string]: any}, options: any = {}) {
         const {user} = options;
-        const response = await request
+        let response;
+        try {
+        response = await request
                 .put(this.buildUri(endpoint), {body: JSON.stringify(Object.assign({user}, body))})
+        response = JSON.parse(response);
+        } catch (err) {
+            response = err;
+        }
         this.handlerError(response);
-        return JSON.parse(response).data;
+        return response.data;
     }
 
     private buildUri(endpoint: string) {
@@ -52,7 +70,7 @@ export class HttpService {
             response = JSON.parse(response);
         }
         if (response.status === 'ERROR') {
-            throw new PrettyError(response.data);
+            throw new PrettyError(response.error || response.data);
         }
     }
 }
