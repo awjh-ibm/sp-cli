@@ -1,7 +1,7 @@
 import { Command } from './command';
 import { HttpService, HttpServiceConfig } from './httpservice';
 import { PrettyError } from './prettyerror';
-import { Util } from './util';
+// import { Util } from './util';
 import inquirer = require('inquirer');
 
 export class Create extends Command {
@@ -123,20 +123,7 @@ export class Create extends Command {
 
         const financeRequestGroup = await this.createFinanceRequest(createAnswers);
 
-        let fullFrg;
-
-        for (let i = 0; i < 5; i++) {
-            try {
-                fullFrg = await this.httpService.get(`financerequests/group/hash/${financeRequestGroup.hash}`, {user: this.dataStore.auth});
-                break;
-            } catch (e) {
-                if (i == 4) {
-                    throw e;
-                }
-
-                await Util.sleep(2000);
-            }
-        }
+        const fullFrg = await this.httpService.get(`financerequests/group/hash/${financeRequestGroup.hash}`, {user: this.dataStore.auth});
 
         return fullFrg;
     }
