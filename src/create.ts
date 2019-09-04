@@ -5,7 +5,7 @@ import { Util } from './util';
 import inquirer = require('inquirer');
 
 export class Create extends Command {
-    private spList: Array<String> = ['BankOfBrusselsSP', 'CopenhagenBankSP', 'DublinBankSP'];
+    private spList: Array<String> = ['BankOfBrusselsSP', 'CopenhagenBankingSP', 'DublinBankSP'];
     httpService: HttpService;
     constructor(dataStore, answers: {[key: string]: any}) {
         super(dataStore, [], answers);

@@ -15,7 +15,7 @@ export class Read extends Command {
     }
 
     public async questions() {
-        const readAnswers = await inquirer.prompt([
+        const readAnswers: any = await inquirer.prompt([
             {
                 type: 'list',
                 name: 'assetType',

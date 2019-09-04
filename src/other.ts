@@ -78,22 +78,29 @@ export class Other extends Command {
 
         const poActions: any = await inquirer.prompt(questions);
 
+        let status = null;
         switch (poActions.action) {
             case 'Approve Purchase Order':
                 await this.httpService.put(`purchaseorders/${purchaseOrder.id}/accept`, {user: this.dataStore.auth});
+                status = 'APPROVED';
                 break;
             case 'Close Purchase Order':
                 await this.httpService.put(`purchaseorders/${purchaseOrder.id}/close`, {user: this.dataStore.auth});
+                status = 'CLOSED';
                 break;
         }
         // TODO - Why is this needed? change to po should have been committed before get is ever called
-        await Util.sleep(2000);
-        return this.httpService.get(`purchaseorders/${purchaseOrder.id}`, {user: this.dataStore.auth})
+        let po = await this.httpService.get(`purchaseorders/${purchaseOrder.id}`, {user: this.dataStore.auth});
+        while (po.status !== status) {
+            await Util.sleep(2000);
+            po = await this.httpService.get(`purchaseorders/${purchaseOrder.id}`, {user: this.dataStore.auth});
+        }
+        return po;
     }
 
     private async manageFinanceRequest() {
         const financeRequests = await this.httpService.get('financerequests', {user: this.dataStore.auth});
-        if (financeRequests.length === 0) {
+        if (!financeRequests || financeRequests.length === 0) {
             throw new PrettyError('No finance requests to manage');
         }
         const manageAnswers: any = await inquirer.prompt([
@@ -126,22 +133,33 @@ export class Other extends Command {
                         type: 'list',
                         name: 'action',
                         choices: ['Withdraw'],
-                        message: 'Which purchase order would you like finance for?'
+                        message: 'What would you like to do with the finance request?'
                     });
                 }
                 break;
             case 'APPROVED':
+                if (financeRequest.requesterId === this.dataStore.auth) {
+                    // if it is me
+                    questions.push({
+                        type: 'list',
+                        name: 'action',
+                        choices: ['Accept', 'Withdraw'],
+                        message: 'What would you like to do with the finance request?'
+                    });
+                }
                 break;
-            case 'REJECTED':
-                break;
-            case 'WITHDRAWN':
-                break;
-            case 'ACCEPTED':
-                break;
+            default:
+                return {error: `You cannot action this finance request (${financeRequest.status})`}
         }
 
-        // const actionAnswers = await inquirer.prompt(questions);
+        const actionAnswers: any = await inquirer.prompt(questions);
 
-        // return this.httpService.put('')
+        switch (actionAnswers.action) {
+            case 'Accept':
+                await this.httpService.put(`financerequests/${financeRequest.id}/accept`, {}, {user: this.dataStore.auth});
+            case 'Withdraw':
+                await this.httpService.put(`financerequests/${financeRequest.id}/withdraw`, {}, {user: this.dataStore.auth});
+        }
+        return this.httpService.get(`financerequests/${financeRequest.id}`, {user: this.dataStore.auth});
     }
 }
