@@ -9,7 +9,6 @@ export class PrettyError extends Error {
                 super(error);
             }
         } else {
-            console.log(error);
             super('Some error occured');
         }
     }

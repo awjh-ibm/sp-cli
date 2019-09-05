@@ -17,6 +17,10 @@ export class PrettyDisplay extends Table {
         }
     }
 
+    public display() {
+        console.log(this.toString());
+    }
+
     private cleanData(data: {[key: string]: any}[]) {
         for (const d of data) {
             for (const key in d) {

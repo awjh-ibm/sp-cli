@@ -42,12 +42,17 @@ export class Other extends Command {
 
     private async managePurchaseOrder() {
         let purchaseOrders = await this.httpService.get('purchaseorders', {user: this.dataStore.auth});
+
         purchaseOrders = purchaseOrders.filter((po) => {
             return po.status === 'PENDING' && po.sellerId === this.dataStore.auth;
         });
+
         if (purchaseOrders.length === 0) {
             throw new PrettyError('No purchase orders to manage');
         }
+
+        const table = new PrettyDisplay(purchaseOrders);
+        table.display();
 
         const manageAnswers: any = await inquirer.prompt([
             {
@@ -57,10 +62,9 @@ export class Other extends Command {
                 choices: purchaseOrders.map(p => p.id)
             }
         ]);
+
         const purchaseOrderId = manageAnswers.purchaseOrderId;
         const purchaseOrder = purchaseOrders.filter(p => p.id === purchaseOrderId)[0];
-        const table = new PrettyDisplay(purchaseOrder);
-        console.log(table.toString());
 
         const questions = [];
 
@@ -77,30 +81,32 @@ export class Other extends Command {
 
         const poActions: any = await inquirer.prompt(questions);
 
-        let status = null;
         switch (poActions.action) {
             case 'Approve Purchase Order':
                 await this.httpService.put(`purchaseorders/${purchaseOrder.id}/accept`, {user: this.dataStore.auth});
-                status = 'APPROVED';
                 break;
             case 'Close Purchase Order':
                 await this.httpService.put(`purchaseorders/${purchaseOrder.id}/close`, {user: this.dataStore.auth});
-                status = 'CLOSED';
                 break;
         }
-        // TODO - Why is this needed? change to po should have been committed before get is ever called
-        let po = await this.httpService.get(`purchaseorders/${purchaseOrder.id}`, {user: this.dataStore.auth});
-        while (po.status !== status) {
-            po = await this.httpService.get(`purchaseorders/${purchaseOrder.id}`, {user: this.dataStore.auth});
-        }
-        return po;
+
+        return this.httpService.get(`purchaseorders/${purchaseOrder.id}`, {user: this.dataStore.auth});
     }
 
     private async manageFinanceRequest() {
-        const financeRequests = await this.httpService.get('financerequests', {user: this.dataStore.auth});
-        if (!financeRequests || financeRequests.length === 0) {
+        let financeRequests = await this.httpService.get('financerequests', {user: this.dataStore.auth});
+
+        financeRequests = financeRequests.filter((fr) => {
+            return (fr.status === 'PENDING' || fr.status === 'APPROVED' ) && fr.requesterId === this.dataStore.auth;
+        });
+
+        if (financeRequests.length === 0) {
             throw new PrettyError('No finance requests to manage');
         }
+
+        const table = new PrettyDisplay(financeRequests);
+        table.display();
+
         const manageAnswers: any = await inquirer.prompt([
             {
                 type: 'list',
@@ -111,8 +117,6 @@ export class Other extends Command {
         ]);
         const financeRequestId = manageAnswers.financeRequestId;
         const financeRequest = financeRequests.filter(f => f.id === financeRequestId)[0];
-        const table = new PrettyDisplay(financeRequest);
-        console.log(table.toString());
 
         /**
          *  PENDING,
@@ -146,8 +150,6 @@ export class Other extends Command {
                     });
                 }
                 break;
-            default:
-                return {error: `You cannot action this finance request (${financeRequest.status})`}
         }
 
         const actionAnswers: any = await inquirer.prompt(questions);

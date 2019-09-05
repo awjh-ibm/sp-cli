@@ -1,6 +1,8 @@
 import inquirer = require("inquirer");
-import {CommandRouter} from './commandrouter';
+import 'colors';
+import { CommandRouter } from './commandrouter';
 import { PrettyError } from "./prettyerror";
+import Table = require('cli-table');
 
 
 const dataStore = {
@@ -17,7 +19,7 @@ async function questionBuilder() {
 }
 
 async function run() {
-    console.log('Welcome to the We.Trade POC (Enrolling Party)')
+    console.log('Welcome to the We.Trade POC Enrolling Party CLI')
     while (true) {
         const answers: any = await questionBuilder();
         if (answers.hasOwnProperty('username')) {
@@ -32,6 +34,7 @@ async function route(dataStore, answers) {
     if (!dataStore.hasOwnProperty('auth')) {
         return run();
     }
+
     try {
         await CommandRouter.route(dataStore, answers);
     } catch (err) {
@@ -49,12 +52,19 @@ async function route(dataStore, answers) {
     }
 }
 
-function login() {
-    return inquirer.prompt([
+async function login() {
+    const answers = await inquirer.prompt([
         {
             type: 'input',
             name: 'username',
-            message: 'What is your username?'
+            message: 'What is your username?',
+            validate: (answer) => {
+                if (answer.split("@").length !== 2) {
+                    return "Username must be of form <NAME>@<ORG>"
+                }
+
+                return true;
+            }
         },
         {
             type: 'password',
@@ -62,6 +72,20 @@ function login() {
             message: 'What is your password?'
         },
     ]);
+
+    const splitUser = answers.username.split("@");
+    const user: string = splitUser[0];
+    const org: string = splitUser[1];
+
+    const message = "Welcome " + user.underline + " to " + org.underline + "'s portal";
+
+    var table = new Table({
+        chars: { 'top': '═', 'top-left': '╔', 'top-right': '╗' , 'bottom': '═', 'bottom-left': '╚', 'bottom-right': '╝', 'left': '║', 'right': '║', }
+    });
+    table.push([message]);
+    console.log(table.toString());
+
+    return answers;
 }
 
 function highLevelActions() {

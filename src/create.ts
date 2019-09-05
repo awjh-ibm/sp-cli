@@ -65,11 +65,14 @@ export class Create extends Command {
                 message: 'What is the purchase order for?'
             }
         ]);
+        
         return this.createPurchaseOrder(createAnswers);
     }
 
     private async createPurchaseOrder(createAnswers) {
-        return this.httpService.post('purchaseorders', Object.assign({buyerId: this.dataStore.auth}, createAnswers), {user: this.dataStore.auth});
+        const partialOrder = await this.httpService.post('purchaseorders', Object.assign({buyerId: this.dataStore.auth}, createAnswers), {user: this.dataStore.auth});
+    
+        return this.httpService.get(`purchaseorders/${partialOrder.id}`, {user: this.dataStore.auth});
     }
 
     private async createFinanceRequestQuestions() {
@@ -120,16 +123,14 @@ export class Create extends Command {
         ]);
 
         createAnswers.requesterId = this.dataStore.auth;
-
-        const financeRequestGroup = await this.createFinanceRequest(createAnswers);
-
-        const fullFrg = await this.httpService.get(`financerequests/group/hash/${financeRequestGroup.hash}`, {user: this.dataStore.auth});
-
-        return fullFrg;
+        
+        return this.createFinanceRequest(createAnswers);
     }
 
     private async createFinanceRequest(createAnswers) {
-        return this.httpService.post('financerequests', Object.assign({requesterId: this.dataStore.auth}, createAnswers), {user: this.dataStore.auth})
+        const partialFrg = await this.httpService.post('financerequests', Object.assign({requesterId: this.dataStore.auth}, createAnswers), {user: this.dataStore.auth})
+    
+        return this.httpService.get(`financerequests/group/hash/${partialFrg.hash}`, {user: this.dataStore.auth});
     }
 
     private async createShipmentQuestions() {
@@ -155,10 +156,13 @@ export class Create extends Command {
             throw new PrettyError('No purchase orders available');
         }
         createAnswers.receiverId = myOrders[0].buyerId;
+        
         return this.createShipment(createAnswers);
     }
 
     private async createShipment(createAnswers) {
-        return this.httpService.post('shipments', Object.assign({senderId: this.dataStore.auth}, createAnswers), {user: this.dataStore.auth});
+        const partialShipment = await this.httpService.post('shipments', Object.assign({senderId: this.dataStore.auth}, createAnswers), {user: this.dataStore.auth});
+    
+        return this.httpService.get(`shipments/${partialShipment.id}`, {user: this.dataStore.auth});
     }
 }

@@ -28,7 +28,7 @@ export class CommandRouter {
         }
         if (data !== "BACK") {
             table = new PrettyDisplay(data);
-            console.log(table.toString());
+            table.display();
         }
     }
 }
