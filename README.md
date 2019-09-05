@@ -1,2 +1,2 @@
-# ep-cli
-The Enrolling Parties CLI
+# sp-cli
+The Service Provider's CLI
