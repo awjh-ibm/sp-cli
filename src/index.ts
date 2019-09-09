@@ -6,7 +6,8 @@ import Table = require('cli-table');
 
 
 const dataStore = {
-    auth: null
+    auth: null,
+    financierId: null
 };
 
 async function questionBuilder() {
@@ -24,6 +25,7 @@ async function run() {
         const answers: any = await questionBuilder();
         if (answers.hasOwnProperty('username')) {
             dataStore.auth = answers.username;
+            dataStore.financierId = answers.username.split('@')[1];
         } else {
             await route(dataStore, answers);
         }
@@ -55,8 +57,9 @@ async function route(dataStore, answers) {
 async function login() {
     const answers: any = await inquirer.prompt([
         {
-            type: 'input',
+            type: 'list',
             name: 'username',
+            choices: ['admin@AmsterdamBankSP', 'admin@BankOfBrusselsSP', 'admin@CopenhagenBankingSP', 'admin@DublinBankSP'],
             message: 'What is your username?',
             validate: (answer) => {
                 if (answer.split("@").length !== 2) {

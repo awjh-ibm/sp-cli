@@ -3,6 +3,7 @@ import { HttpService, HttpServiceConfig } from "./httpservice";
 import { PrettyDisplay } from "./prettydisplay";
 import { PrettyError } from "./prettyerror";
 import inquirer = require("inquirer");
+import 'colors';
 
 export class Other extends Command {
     httpService: HttpService;
@@ -10,7 +11,7 @@ export class Other extends Command {
         super(dataStore, [], answers);
         const httpConfig: HttpServiceConfig = {
             host: 'http://localhost',
-            port: process.env.EP_CLI_PORT,
+            port: process.env.SP_CLI_PORT,
             baseUrl: '/api'
         };
         this.httpService = new HttpService(httpConfig);
@@ -22,15 +23,13 @@ export class Other extends Command {
                 type: 'list',
                 name: 'action',
                 message: 'What would you like to do?',
-                choices: ['Manage Purchase Order', 'Manage Finance Request', 'Manage Shipment', 'Go back']
+                choices: ['Manage Finance Request', 'Go back']
             }
         ]);
 
         const action = otherAnswers.action;
 
         switch (action) {
-            case 'Manage Purchase Order':
-                return this.managePurchaseOrder();
             case 'Manage Finance Request':
                 return this.manageFinanceRequest();
             case 'Manage Shipment':
@@ -40,64 +39,11 @@ export class Other extends Command {
         }
     }
 
-    private async managePurchaseOrder() {
-        let purchaseOrders = await this.httpService.get('purchaseorders', {user: this.dataStore.auth});
-
-        purchaseOrders = purchaseOrders.filter((po) => {
-            return po.status === 'PENDING' && po.sellerId === this.dataStore.auth;
-        });
-
-        if (purchaseOrders.length === 0) {
-            throw new PrettyError('No purchase orders to manage');
-        }
-
-        const table = new PrettyDisplay(purchaseOrders);
-        table.display();
-
-        const manageAnswers: any = await inquirer.prompt([
-            {
-                type: 'list',
-                name: 'purchaseOrderId',
-                message: 'Which purchase order do you want to manage?',
-                choices: purchaseOrders.map(p => p.id)
-            }
-        ]);
-
-        const purchaseOrderId = manageAnswers.purchaseOrderId;
-        const purchaseOrder = purchaseOrders.filter(p => p.id === purchaseOrderId)[0];
-
-        const questions = [];
-
-        if (purchaseOrder.status === 'PENDING' && purchaseOrder.sellerId === this.dataStore.auth) {
-            questions.push(
-                {
-                    type: 'list',
-                    name: 'action',
-                    message: 'What do you want to do?',
-                    choices: ['Approve Purchase Order', 'Close Purchase Order']
-                }
-            );
-        }
-
-        const poActions: any = await inquirer.prompt(questions);
-
-        switch (poActions.action) {
-            case 'Approve Purchase Order':
-                await this.httpService.put(`purchaseorders/${purchaseOrder.id}/accept`, {user: this.dataStore.auth});
-                break;
-            case 'Close Purchase Order':
-                await this.httpService.put(`purchaseorders/${purchaseOrder.id}/close`, {user: this.dataStore.auth});
-                break;
-        }
-
-        return this.httpService.get(`purchaseorders/${purchaseOrder.id}`, {user: this.dataStore.auth});
-    }
-
     private async manageFinanceRequest() {
-        let financeRequests = await this.httpService.get('financerequests', {user: this.dataStore.auth});
+        let financeRequests = await this.httpService.get('financerequests', {user: this.dataStore.financierId});
 
         financeRequests = financeRequests.filter((fr) => {
-            return (fr.status === 'PENDING' || fr.status === 'APPROVED' ) && fr.requesterId === this.dataStore.auth;
+            return fr.financierId === this.dataStore.financierId && fr.status === 'PENDING';
         });
 
         if (financeRequests.length === 0) {
@@ -129,23 +75,12 @@ export class Other extends Command {
 
         switch (financeRequest.status) {
             case 'PENDING':
-                if (financeRequest.requesterId === this.dataStore.auth) {
+                if (financeRequest.financierId === this.dataStore.financierId) {
                     // if it is me
                     questions.push({
                         type: 'list',
                         name: 'action',
-                        choices: ['Withdraw'],
-                        message: 'What would you like to do with the finance request?'
-                    });
-                }
-                break;
-            case 'APPROVED':
-                if (financeRequest.requesterId === this.dataStore.auth) {
-                    // if it is me
-                    questions.push({
-                        type: 'list',
-                        name: 'action',
-                        choices: ['Accept', 'Withdraw'],
+                        choices: ['Approve', 'Reject'],
                         message: 'What would you like to do with the finance request?'
                     });
                 }
@@ -155,11 +90,58 @@ export class Other extends Command {
         const actionAnswers: any = await inquirer.prompt(questions);
 
         switch (actionAnswers.action) {
-            case 'Accept':
-                await this.httpService.put(`financerequests/${financeRequest.id}/accept`, {}, {user: this.dataStore.auth});
-            case 'Withdraw':
-                await this.httpService.put(`financerequests/${financeRequest.id}/withdraw`, {}, {user: this.dataStore.auth});
+            case 'Approve':
+                await this.validatePurchaseOrder(financeRequest);
+                await this.httpService.put(`financerequests/${financeRequest.id}/approve`, {}, {user: this.dataStore.financierId});
+                break;
+            case 'Reject':
+                await this.httpService.put(`financerequests/${financeRequest.id}/reject`, {}, {user: this.dataStore.financierId});
+                break;
         }
-        return this.httpService.get(`financerequests/${financeRequest.id}`, {user: this.dataStore.auth});
+        return this.httpService.get(`financerequests/${financeRequest.id}`, {user: this.dataStore.financierId});
+    }
+
+    async getPurchaseOrderInfo() {
+        return await inquirer.prompt([
+            {
+                type: 'text',
+                name: 'buyerId',
+                message: 'Who is buying the goods?'
+            },
+            {
+                type: 'text',
+                name: 'price',
+                message: 'How much is each unit?'
+            },
+            {
+                type: 'text',
+                name: 'units',
+                message: 'How many units?'
+            },
+            {
+                type: 'text',
+                name: 'productDescriptor',
+                message: 'What is the purchase order for?'
+            }
+        ]);
+    }
+
+    async validatePurchaseOrder(fr) {
+        const purchaseOrder: any = await this.getPurchaseOrderInfo();
+        purchaseOrder.id = fr.purchaseOrderId;
+        purchaseOrder.sellerId = fr.requesterId;
+        purchaseOrder.status = 'APPROVED';
+        let resp;
+        try {
+            resp = await this.httpService.post('purchaseorders/verify', purchaseOrder, {});
+            const table = new PrettyDisplay([{'Verified': '✔'.green}])
+            table.display();
+        } catch (err) {
+            resp = err;
+            const table = new PrettyDisplay([{'Verified': '✗'.red}])
+            table.display();
+            throw err;
+        }
+        return resp;
     }
 }

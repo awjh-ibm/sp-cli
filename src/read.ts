@@ -8,7 +8,7 @@ export class Read extends Command {
         super(dataStore, [], answers);
         const httpConfig: HttpServiceConfig = {
             host: 'http://localhost',
-            port: process.env.EP_CLI_PORT,
+            port: process.env.SP_CLI_PORT,
             baseUrl: '/api'
         };
         this.httpService = new HttpService(httpConfig);
@@ -20,7 +20,7 @@ export class Read extends Command {
                 type: 'list',
                 name: 'assetType',
                 message: 'What would you like to read?',
-                choices: ['Purchase Orders', 'Finance Requests', 'Shipments', 'Go back']
+                choices: ['Finance Requests', 'Go back']
             },
         ]);
 
@@ -34,6 +34,6 @@ export class Read extends Command {
     public async getData(readAnswers: {[key: string]: any}) {
         const assetType = readAnswers.assetType.toLowerCase().replace(' ', '');
 
-        return this.httpService.get(assetType, {user: this.dataStore.auth});
+        return this.httpService.get(assetType, {user: this.dataStore.financierId});
     }
 }

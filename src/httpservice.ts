@@ -13,7 +13,7 @@ export class HttpService {
         this.config = config;
     }
 
-    public async get(endpoint: string, options: any = {}) {
+    public async get(endpoint: string, options: any = {}, body: any = {}) {
         const {user} = options;
         let response;
         try {
@@ -21,9 +21,10 @@ export class HttpService {
                 .get({
                     method: 'GET',
                     url: this.buildUri(endpoint),
-                    body: JSON.stringify({
-                        user
-                    })
+                    body: JSON.stringify(Object.assign({
+                        user,
+                        behalfOfId: user
+                    }, body))
                 })
             response = JSON.parse(response);
         } catch (err) {
@@ -40,7 +41,7 @@ export class HttpService {
             response = await request
                 .post(this.buildUri(endpoint), {body: JSON.stringify(Object.assign({user}, body))})
             response = JSON.parse(response);
-        } catch (err) {
+       } catch (err) {
             response = err;
         }
         this.handlerError(response);
@@ -69,8 +70,8 @@ export class HttpService {
         if (typeof response === 'string') {
             response = JSON.parse(response);
         }
-        if (response.status === 'ERROR') {
-            throw new PrettyError(response.error || response.data);
+        if (response.status === 'ERROR' || response.error) {
+            throw new PrettyError(response.message || "An error occurred");
         }
     }
 }
