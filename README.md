@@ -2,10 +2,10 @@
 
 ## Configuration
 
-The Command Line Interface (CLI) for this POC is written in Node.js using Inquirer and Commander. The API's work by calling a rest server that runs locally on a port specified by the `SP_CLI_PORT` environment variable.
+The Command Line Interface (CLI) for this POC is written in Node.js using Inquirer and Commander. The APIs work by calling a rest server that runs locally on a port specified by the `SP_CLI_PORT` environment variable.
 
 ``` bash
-SP_CLI_PORT=7002 npm start
+SP_CLI_PORT=7000 npm start
 ```
 
 ## Install
@@ -19,17 +19,16 @@ npm build
 Start the program
 
 ```bash
-SP_CLI_PORT=7002 npm start
+SP_CLI_PORT=7000 npm start
 ```
 
 ## Usage
 
 ```bash
-# Create a CLI for Copenhagen Banking, who's REST server is running on port 7002
-SP_CLI_PORT=7002 npm start
+SP_CLI_PORT=7000 npm start
 ```
 
-Select which participant you want to be, ensuring that the Organization name is the same as that of the REST server at the port you have chosen.
+Select which participant you want to be (Alice or Bob), ensuring that the organization name matches the organization of the REST server the instance is connected to.
 ![Select Participant](docs/select-participant.png "Select a Participant")
 
 From here you can select `Create`, `Read` or `Other`
@@ -52,4 +51,4 @@ This allows you to manage your `Finance Requests`
 
 ### Help
 
-Contact [Liam Grace](mailto:liam.grace@ibm.com) or [Andrew Hurt](mailto:andrew.hurt@uk.ibm.com) if you have any issues.
+Contact [Liam Grace](mailto:liam.grace@ibm.com) or [Andrew Hurt](mailto:andrew.hurt1@uk.ibm.com) if you have any issues.
