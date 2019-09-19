@@ -1,4 +1,5 @@
 import Table = require('cli-table');
+import moment = require('moment');
 
 export class PrettyDisplay extends Table {
     constructor(data: {[key: string]: any}[]) {
@@ -44,8 +45,8 @@ export class PrettyDisplay extends Table {
                 if (key === 'hash' && truncHash) {
                     d[key] = d[key].substr(0, 10);
                 } else if (key === 'completionDate') {
-                    d[key] = Date.parse(d[key]);
-
+                    const date = moment(d[key], "ddd MMM D HH:mm:ss ZZ YYYY").format('DD/MM/YY');
+                    d[key] = date;
                 }
                 return d[key]
             });

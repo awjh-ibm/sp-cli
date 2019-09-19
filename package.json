@@ -1,5 +1,5 @@
 {
-  "name": "ep-cli",
+  "name": "sp-cli",
   "version": "0.0.1",
   "description": "EP CLI implementation",
   "main": "dist/index.js",
